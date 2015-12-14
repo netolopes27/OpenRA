@@ -22,10 +22,11 @@ namespace OpenRA
 	{
 		public SpriteRenderer WorldSpriteRenderer { get; private set; }
 		public SpriteRenderer WorldRgbaSpriteRenderer { get; private set; }
-		public QuadRenderer WorldQuadRenderer { get; private set; }
 		public LineRenderer WorldLineRenderer { get; private set; }
+		public RgbaColorRenderer WorldRgbaColorRenderer { get; private set; }
 		public VoxelRenderer WorldVoxelRenderer { get; private set; }
 		public LineRenderer LineRenderer { get; private set; }
+		public RgbaColorRenderer RgbaColorRenderer { get; private set; }
 		public SpriteRenderer RgbaSpriteRenderer { get; private set; }
 		public SpriteRenderer SpriteRenderer { get; private set; }
 		public IReadOnlyDictionary<string, SpriteFont> Fonts;
@@ -62,10 +63,11 @@ namespace OpenRA
 
 			WorldSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
 			WorldRgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
-			WorldLineRenderer = new LineRenderer(this, Device.CreateShader("line"));
+			WorldLineRenderer = new LineRenderer(this, Device.CreateShader("color"));
+			WorldRgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
 			WorldVoxelRenderer = new VoxelRenderer(this, Device.CreateShader("vxl"));
-			LineRenderer = new LineRenderer(this, Device.CreateShader("line"));
-			WorldQuadRenderer = new QuadRenderer(this, Device.CreateShader("line"));
+			LineRenderer = new LineRenderer(this, Device.CreateShader("color"));
+			RgbaColorRenderer = new RgbaColorRenderer(this, Device.CreateShader("color"));
 			RgbaSpriteRenderer = new SpriteRenderer(this, Device.CreateShader("rgba"));
 			SpriteRenderer = new SpriteRenderer(this, Device.CreateShader("shp"));
 
@@ -111,6 +113,7 @@ namespace OpenRA
 
 		public void SetViewportParams(int2 scroll, float zoom)
 		{
+			// PERF: Calling SetViewportParams on each renderer is slow. Only call it when things change.
 			var resolutionChanged = lastResolution != Resolution;
 			if (resolutionChanged)
 			{
@@ -118,6 +121,7 @@ namespace OpenRA
 				RgbaSpriteRenderer.SetViewportParams(Resolution, 1f, int2.Zero);
 				SpriteRenderer.SetViewportParams(Resolution, 1f, int2.Zero);
 				LineRenderer.SetViewportParams(Resolution, 1f, int2.Zero);
+				RgbaColorRenderer.SetViewportParams(Resolution, 1f, int2.Zero);
 			}
 
 			// If zoom evaluates as different due to floating point weirdness that's OK, setting the parameters again is harmless.
@@ -129,7 +133,7 @@ namespace OpenRA
 				WorldSpriteRenderer.SetViewportParams(Resolution, zoom, scroll);
 				WorldVoxelRenderer.SetViewportParams(Resolution, zoom, scroll);
 				WorldLineRenderer.SetViewportParams(Resolution, zoom, scroll);
-				WorldQuadRenderer.SetViewportParams(Resolution, zoom, scroll);
+				WorldRgbaColorRenderer.SetViewportParams(Resolution, zoom, scroll);
 			}
 		}
 
