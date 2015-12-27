@@ -18,6 +18,9 @@ namespace OpenRA.Platforms.Default
 {
 	class Shader : ThreadAffine, IShader
 	{
+		public const int VertexPosAttributeIndex = 0;
+		public const int TexCoordAttributeIndex = 1;
+
 		readonly Dictionary<string, int> samplers = new Dictionary<string, int>();
 		readonly Dictionary<int, ITexture> textures = new Dictionary<int, ITexture>();
 		readonly int program;
@@ -25,7 +28,7 @@ namespace OpenRA.Platforms.Default
 		protected int CompileShaderObject(ShaderType type, string name)
 		{
 			var ext = type == ShaderType.VertexShader ? "vert" : "frag";
-			var filename = "glsl{0}{1}.{2}".F(Path.DirectorySeparatorChar, name, ext);
+			var filename = Path.Combine(Platform.GameDir, "glsl", name + "." + ext);
 			var code = File.ReadAllText(filename);
 
 			var shader = GL.CreateShader(type);
@@ -62,6 +65,12 @@ namespace OpenRA.Platforms.Default
 			// Assemble program
 			program = GL.CreateProgram();
 			ErrorHandler.CheckGlError();
+
+			GL.BindAttribLocation(program, VertexPosAttributeIndex, "aVertexPosition");
+			ErrorHandler.CheckGlError();
+			GL.BindAttribLocation(program, TexCoordAttributeIndex, "aVertexTexCoord");
+			ErrorHandler.CheckGlError();
+
 			GL.AttachShader(program, vertexShader);
 			ErrorHandler.CheckGlError();
 			GL.AttachShader(program, fragmentShader);
