@@ -47,7 +47,6 @@
 		Sequence: rank
 		Palette: effect
 		ReferencePoint: Bottom, Right
-		Offset: 2, 2
 		UpgradeTypes: rank
 		ZOffset: 256
 		UpgradeMinEnabledLevel: 1
@@ -354,6 +353,7 @@
 		RepairBuildings: fix
 		RearmBuildings: afld
 		AirborneUpgrades: airborne
+		CruisingUpgrades: cruising
 	Targetable@GROUND:
 		TargetTypes: Ground, Repair, Vehicle
 		UpgradeTypes: airborne
@@ -397,7 +397,9 @@
 		CanHover: True
 	GpsDot:
 		String: Helicopter
-	Hovers:
+	Hovers@CRUISING:
+		UpgradeTypes: cruising
+		UpgradeMinEnabledLevel: 1
 
 ^BasicBuilding:
 	Inherits@1: ^ExistsInWorld
@@ -521,7 +523,12 @@
 		DamageThreshold: 90
 	RevealsShroud:
 		Range: 4c0
-	Fake:
+	WithDecoration@fake:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-fake
+		ReferencePoint: Top
+		ZOffset: 256
 	-EmitInfantryOnSell:
 	-MustBeDestroyed:
 
@@ -621,6 +628,7 @@
 		GenericName: Destroyed Plane
 	Aircraft:
 		AirborneUpgrades: airborne
+		CruisingUpgrades: cruising
 	FallsToEarth:
 		Spins: False
 		Moves: True
@@ -633,6 +641,7 @@
 		GenericName: Destroyed Helicopter
 	Aircraft:
 		AirborneUpgrades: airborne
+		CruisingUpgrades: cruising
 		CanHover: True
 	FallsToEarth:
 

@@ -88,12 +88,20 @@ construction_yard:
 		Prerequisites: upgrade.conyard
 		Upgrades: stardecoration
 	WithDecoration@upgraded:
-		SelectionDecoration: true
+		RequiresSelection: true
 		Image: pips
 		Sequence: tag-upgraded
 		ReferencePoint: Top, Right
 		ZOffset: 256
 		UpgradeTypes: stardecoration
+		UpgradeMinEnabledLevel: 1
+	WithDecoration@primary:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-primary
+		ReferencePoint: Top
+		ZOffset: 256
+		UpgradeTypes: primary
 		UpgradeMinEnabledLevel: 1
 
 wind_trap:
@@ -191,12 +199,20 @@ barracks:
 		Prerequisites: upgrade.barracks
 		Upgrades: stardecoration
 	WithDecoration@upgraded:
-		SelectionDecoration: true
+		RequiresSelection: true
 		Image: pips
 		Sequence: tag-upgraded
 		ReferencePoint: Top, Right
 		ZOffset: 256
 		UpgradeTypes: stardecoration
+		UpgradeMinEnabledLevel: 1
+	WithDecoration@primary:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-primary
+		ReferencePoint: Top
+		ZOffset: 256
+		UpgradeTypes: primary
 		UpgradeMinEnabledLevel: 1
 
 refinery:
@@ -359,12 +375,20 @@ light_factory:
 		Prerequisites: upgrade.light
 		Upgrades: stardecoration
 	WithDecoration@upgraded:
-		SelectionDecoration: true
+		RequiresSelection: true
 		Image: pips
 		Sequence: tag-upgraded
 		ReferencePoint: Top, Right
 		ZOffset: 256
 		UpgradeTypes: stardecoration
+		UpgradeMinEnabledLevel: 1
+	WithDecoration@primary:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-primary
+		ReferencePoint: Top
+		ZOffset: 256
+		UpgradeTypes: primary
 		UpgradeMinEnabledLevel: 1
 
 heavy_factory:
@@ -432,18 +456,28 @@ heavy_factory:
 		Prerequisites: upgrade.heavy
 		Upgrades: stardecoration
 	WithDecoration@upgraded:
-		SelectionDecoration: true
+		RequiresSelection: true
 		Image: pips
 		Sequence: tag-upgraded
 		ReferencePoint: Top, Right
 		ZOffset: 256
 		UpgradeTypes: stardecoration
 		UpgradeMinEnabledLevel: 1
+	WithDecoration@primary:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-primary
+		ReferencePoint: Top
+		ZOffset: 256
+		UpgradeTypes: primary
+		UpgradeMinEnabledLevel: 1
 
 outpost:
 	Inherits: ^Building
 	RequiresPower:
 	CanPowerDown:
+		PowerupSound: EnablePower
+		PowerdownSound: DisablePower
 	DisabledOverlay:
 	Buildable:
 		Prerequisites: construction_yard, barracks, ~techlevel.medium
@@ -528,6 +562,8 @@ starport:
 	PrimaryBuilding:
 	RequiresPower:
 	CanPowerDown:
+		PowerupSound: EnablePower
+		PowerdownSound: DisablePower
 	DisabledOverlay:
 	ProvidesPrerequisite@atreides:
 		Prerequisite: starport.atreides
@@ -541,6 +577,14 @@ starport:
 	Power:
 		Amount: -150
 	ProvidesPrerequisite@buildingname:
+	WithDecoration@primary:
+		RequiresSelection: true
+		Image: pips
+		Sequence: tag-primary
+		ReferencePoint: Top
+		ZOffset: 256
+		UpgradeTypes: primary
+		UpgradeMinEnabledLevel: 1
 
 wall:
 	Inherits@1: ^SpriteActor
@@ -672,6 +716,8 @@ large_gun_turret:
 		InitialFacing: 128
 	RequiresPower:
 	CanPowerDown:
+		PowerupSound: EnablePower
+		PowerdownSound: DisablePower
 	DisabledOverlay:
 	Power:
 		Amount: -60
@@ -782,7 +828,7 @@ high_tech_factory:
 		Prerequisites: upgrade.hightech
 		Upgrades: stardecoration
 	WithDecoration@upgraded:
-		SelectionDecoration: true
+		RequiresSelection: true
 		Image: pips
 		Sequence: tag-upgraded
 		ReferencePoint: Top, Right
@@ -923,6 +969,8 @@ palace:
 	Production:
 		Produces: Palace
 	CanPowerDown:
+		PowerupSound: EnablePower
+		PowerdownSound: DisablePower
 	DisabledOverlay:
 	RequiresPower:
 	SupportPowerChargeBar:
