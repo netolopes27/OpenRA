@@ -140,9 +140,9 @@ mod_common: $(mod_common_TARGET)
 test_dll_SRCS := $(shell find OpenRA.Test/ -iname '*.cs')
 test_dll_TARGET = OpenRA.Test.dll
 test_dll_KIND = library
-test_dll_DEPS = $(game_TARGET)
+test_dll_DEPS = $(game_TARGET) $(mod_common_TARGET)
 test_dll_FLAGS = -warn:1
-test_dll_LIBS = $(COMMON_LIBS) $(game_TARGET) $(NUNIT_LIBS)
+test_dll_LIBS = $(COMMON_LIBS) $(game_TARGET) $(mod_common_TARGET) $(NUNIT_LIBS)
 PROGRAMS += test_dll
 test_dll: $(test_dll_TARGET)
 
@@ -228,7 +228,7 @@ check: utility mods
 	@echo "Checking for code style violations in OpenRA.Test..."
 	@mono --debug OpenRA.Utility.exe ra --check-code-style OpenRA.Test
 
-NUNIT_CONSOLE := $(shell test -f thirdparty/download/nunit-console.exe && echo mono thirdparty/download/nunit-console.exe || \
+NUNIT_CONSOLE := $(shell test -f thirdparty/download/nunit3-console.exe && echo mono thirdparty/download/nunit3-console.exe || \
 	which nunit2-console 2>/dev/null || which nunit3-console 2>/dev/null || which nunit-console 2>/dev/null)
 nunit: test_dll
 	@echo
@@ -243,7 +243,7 @@ nunit: test_dll
 		echo 'NUnit version >= 2.6 required'>&2; \
 		exit 1; \
 	fi
-	@$(NUNIT_CONSOLE) $(test_dll_TARGET)
+	@$(NUNIT_CONSOLE) --noresult $(test_dll_TARGET)
 
 test: utility mods
 	@echo
