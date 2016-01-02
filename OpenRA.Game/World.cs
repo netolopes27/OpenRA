@@ -42,6 +42,8 @@ namespace OpenRA
 
 		public void SetPlayers(IEnumerable<Player> players, Player localPlayer)
 		{
+			if (Players.Length > 0)
+				throw new InvalidOperationException("Players are fixed once they have been set.");
 			Players = players.ToArray();
 			SetLocalPlayer(localPlayer);
 		}
@@ -211,7 +213,9 @@ namespace OpenRA
 			foreach (var player in Players)
 				gameInfo.AddPlayer(player, OrderManager.LobbyInfo);
 
-			var rc = OrderManager.Connection as ReplayRecorderConnection;
+			var echo = OrderManager.Connection as EchoConnection;
+			var rc = echo != null ? echo.Recorder : null;
+
 			if (rc != null)
 				rc.Metadata = new ReplayMetadata(gameInfo);
 		}
@@ -260,6 +264,7 @@ namespace OpenRA
 		public event Action<Actor> ActorAdded = _ => { };
 		public event Action<Actor> ActorRemoved = _ => { };
 
+		public bool ShouldTick { get { return Type != WorldType.Shellmap || Game.Settings.Game.ShowShellmap; } }
 		public bool Paused { get; internal set; }
 		public bool PredictedPaused { get; internal set; }
 		public bool PauseStateLocked { get; set; }
@@ -282,7 +287,7 @@ namespace OpenRA
 
 		public void Tick()
 		{
-			if (!Paused && (Type != WorldType.Shellmap || Game.Settings.Game.ShowShellmap))
+			if (!Paused)
 			{
 				WorldTick++;
 

@@ -58,6 +58,12 @@ namespace OpenRA.Mods.Common.Effects
 		[Desc("Is the missile blocked by actors with BlocksProjectiles: trait.")]
 		public readonly bool Blockable = true;
 
+		[Desc("Width of projectile (used for finding blocking actors).")]
+		public readonly WDist Width = new WDist(1);
+
+		[Desc("Extra search radius beyond path for blocking actors.")]
+		public readonly WDist TargetExtraSearchRadius = new WDist(1536);
+
 		[Desc("Maximum offset at the maximum range")]
 		public readonly WDist Inaccuracy = WDist.Zero;
 
@@ -69,6 +75,9 @@ namespace OpenRA.Mods.Common.Effects
 
 		[Desc("Vertical rate of turn.")]
 		public readonly int VerticalRateOfTurn = 6;
+
+		[Desc("Gravity applied while in free fall.")]
+		public readonly int Gravity = 10;
 
 		[Desc("Run out of fuel after being activated this many ticks. Zero for unlimited fuel.")]
 		public readonly int RangeLimit = 0;
@@ -104,6 +113,8 @@ namespace OpenRA.Mods.Common.Effects
 		public readonly bool TrailWhenDeactivated = false;
 
 		public readonly int ContrailLength = 0;
+
+		public readonly int ContrailZOffset = 2047;
 
 		public readonly WDist ContrailWidth = new WDist(64);
 
@@ -144,8 +155,7 @@ namespace OpenRA.Mods.Common.Effects
 		readonly ProjectileArgs args;
 		readonly Animation anim;
 
-		// NOTE: Might be desirable to unhardcode the number -10
-		readonly WVec gravity = new WVec(0, 0, -10);
+		readonly WVec gravity;
 
 		int ticks;
 
@@ -183,6 +193,7 @@ namespace OpenRA.Mods.Common.Effects
 
 			pos = args.Source;
 			hFacing = args.Facing;
+			gravity = new WVec(0, 0, -info.Gravity);
 			targetPosition = args.PassiveTarget;
 
 			var world = args.SourceActor.World;
@@ -211,7 +222,7 @@ namespace OpenRA.Mods.Common.Effects
 			if (info.ContrailLength > 0)
 			{
 				var color = info.ContrailUsePlayerColor ? ContrailRenderable.ChooseColor(args.SourceActor) : info.ContrailColor;
-				contrail = new ContrailRenderable(world, color, info.ContrailWidth, info.ContrailLength, info.ContrailDelay, 0);
+				contrail = new ContrailRenderable(world, color, info.ContrailWidth, info.ContrailLength, info.ContrailDelay, info.ContrailZOffset);
 			}
 
 			trailPalette = info.TrailPalette;
@@ -773,7 +784,18 @@ namespace OpenRA.Mods.Common.Effects
 			renderFacing = WAngle.ArcTan(move.Z - move.Y, move.X).Angle / 4 - 64;
 
 			// Move the missile
+			var lastPos = pos;
 			pos += move;
+
+			// Check for walls or other blocking obstacles
+			var shouldExplode = false;
+			WPos blockedPos;
+			if (info.Blockable && BlocksProjectiles.AnyBlockingActorsBetween(world, lastPos, pos, info.Width,
+				info.TargetExtraSearchRadius, out blockedPos))
+			{
+				pos = blockedPos;
+				shouldExplode = true;
+			}
 
 			// Create the smoke trail effect
 			if (!string.IsNullOrEmpty(info.TrailImage) && --ticksToNextSmoke < 0 && (state != States.Freefall || info.TrailWhenDeactivated))
@@ -786,14 +808,10 @@ namespace OpenRA.Mods.Common.Effects
 				contrail.Update(pos);
 
 			var cell = world.Map.CellContaining(pos);
-
-			// NOTE: High speeds might cause the missile to miss the target or fly through obstacles
-			//       In that case, big moves should probably be decomposed into multiple smaller ones with hit checks
 			var height = world.Map.DistanceAboveTerrain(pos);
-			var shouldExplode = (height.Length < 0) // Hit the ground
-				|| (relTarDist < info.CloseEnough.Length) // Within range
+			shouldExplode |= height.Length < 0 // Hit the ground
+				|| relTarDist < info.CloseEnough.Length // Within range
 				|| (info.ExplodeWhenEmpty && info.RangeLimit != 0 && ticks > info.RangeLimit) // Ran out of fuel
-				|| (info.Blockable && BlocksProjectiles.AnyBlockingActorAt(world, pos)) // Hit a wall or other blocking obstacle
 				|| !world.Map.Contains(cell) // This also avoids an IndexOutOfRangeException in GetTerrainInfo below.
 				|| (!string.IsNullOrEmpty(info.BoundToTerrainType) && world.Map.GetTerrainInfo(cell).Type != info.BoundToTerrainType) // Hit incompatible terrain
 				|| (height.Length < info.AirburstAltitude.Length && relTarHorDist < info.CloseEnough.Length); // Airburst

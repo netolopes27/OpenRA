@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenRA.Graphics;
+using OpenRA.Primitives;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Traits
@@ -27,7 +28,7 @@ namespace OpenRA.Mods.Common.Traits
 		public object Create(ActorInitializer init) { return new FrozenUnderFog(init, this); }
 	}
 
-	public class FrozenUnderFog : IRenderModifier, IDefaultVisibility, ITick, ITickRender, ISync
+	public class FrozenUnderFog : IRenderModifier, IDefaultVisibility, ITick, ITickRender, ISync, INotifyCreated
 	{
 		[Sync] public int VisibilityHash;
 
@@ -35,12 +36,9 @@ namespace OpenRA.Mods.Common.Traits
 		readonly bool startsRevealed;
 		readonly PPos[] footprint;
 
-		readonly Dictionary<Player, FrozenState> stateByPlayer = new Dictionary<Player, FrozenState>();
-
-		FrozenState[] stateByPlayerIndex;
+		PlayerDictionary<FrozenState> frozenStates;
 		ITooltip tooltip;
 		Health health;
-		bool initialized;
 		bool isRendering;
 
 		class FrozenState
@@ -65,13 +63,47 @@ namespace OpenRA.Mods.Common.Traits
 			footprint = footprintCells.SelectMany(c => map.ProjectedCellsCovering(c.ToMPos(map))).ToArray();
 		}
 
+		public void Created(Actor self)
+		{
+			tooltip = self.TraitsImplementing<ITooltip>().FirstOrDefault();
+			health = self.TraitOrDefault<Health>();
+
+			frozenStates = new PlayerDictionary<FrozenState>(self.World, (player, playerIndex) =>
+			{
+				var frozenActor = new FrozenActor(self, footprint, player.Shroud, startsRevealed);
+				if (startsRevealed)
+					UpdateFrozenActor(self, frozenActor, playerIndex);
+				player.PlayerActor.Trait<FrozenActorLayer>().Add(frozenActor);
+				return new FrozenState(frozenActor) { IsVisible = startsRevealed };
+			});
+		}
+
+		void UpdateFrozenActor(Actor self, FrozenActor frozenActor, int playerIndex)
+		{
+			VisibilityHash |= 1 << (playerIndex % 32);
+
+			frozenActor.Owner = self.Owner;
+
+			if (health != null)
+			{
+				frozenActor.HP = health.HP;
+				frozenActor.DamageState = health.DamageState;
+			}
+
+			if (tooltip != null)
+			{
+				frozenActor.TooltipInfo = tooltip.TooltipInfo;
+				frozenActor.TooltipOwner = tooltip.Owner;
+			}
+		}
+
 		bool IsVisibleInner(Actor self, Player byPlayer)
 		{
 			// If fog is disabled visibility is determined by shroud
 			if (!byPlayer.Shroud.FogEnabled)
 				return byPlayer.Shroud.AnyExplored(self.OccupiesSpace.OccupiedCells());
 
-			return initialized && stateByPlayer[byPlayer].IsVisible;
+			return frozenStates[byPlayer].IsVisible;
 		}
 
 		public bool IsVisible(Actor self, Player byPlayer)
@@ -89,71 +121,25 @@ namespace OpenRA.Mods.Common.Traits
 				return;
 
 			VisibilityHash = 0;
-			var players = self.World.Players;
 
-			if (!initialized)
+			for (var playerIndex = 0; playerIndex < frozenStates.Count; playerIndex++)
 			{
-				// The world players never change, so we can safely index this collection.
-				stateByPlayerIndex = new FrozenState[players.Length];
-				tooltip = self.TraitsImplementing<ITooltip>().FirstOrDefault();
-				health = self.TraitOrDefault<Health>();
-			}
-
-			for (var i = 0; i < players.Length; i++)
-			{
-				FrozenActor frozenActor;
-				bool isVisible;
-				if (!initialized)
-				{
-					var player = players[i];
-					frozenActor = new FrozenActor(self, footprint, player.Shroud, startsRevealed);
-					isVisible = startsRevealed;
-					var state = new FrozenState(frozenActor) { IsVisible = isVisible };
-					stateByPlayer.Add(player, state);
-					stateByPlayerIndex[i] = state;
-					player.PlayerActor.Trait<FrozenActorLayer>().Add(frozenActor);
-				}
-				else
-				{
-					// PERF: Minimize lookup cost by combining all state into one, and using an array rather than a dictionary.
-					var state = stateByPlayerIndex[i];
-					frozenActor = state.FrozenActor;
-					isVisible = !frozenActor.Visible;
-					state.IsVisible = isVisible;
-				}
+				var state = frozenStates[playerIndex];
+				var frozenActor = state.FrozenActor;
+				var isVisible = !frozenActor.Visible;
+				state.IsVisible = isVisible;
 
 				if (isVisible)
-					VisibilityHash |= 1 << (i % 32);
-				else
-					continue;
-
-				frozenActor.Owner = self.Owner;
-
-				if (health != null)
-				{
-					frozenActor.HP = health.HP;
-					frozenActor.DamageState = health.DamageState;
-				}
-
-				if (tooltip != null)
-				{
-					frozenActor.TooltipInfo = tooltip.TooltipInfo;
-					frozenActor.TooltipOwner = tooltip.Owner;
-				}
+					UpdateFrozenActor(self, frozenActor, playerIndex);
 			}
-
-			initialized = true;
 		}
 
 		public void TickRender(WorldRenderer wr, Actor self)
 		{
-			if (!initialized)
-				return;
-
 			IRenderable[] renderables = null;
-			foreach (var player in self.World.Players)
+			for (var playerIndex = 0; playerIndex < frozenStates.Count; playerIndex++)
 			{
-				var frozen = stateByPlayer[player].FrozenActor;
+				var frozen = frozenStates[playerIndex].FrozenActor;
 				if (!frozen.NeedRenderables)
 					continue;
 
@@ -171,10 +157,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public IEnumerable<IRenderable> ModifyRender(Actor self, WorldRenderer wr, IEnumerable<IRenderable> r)
 		{
-			return
-				IsVisible(self, self.World.RenderPlayer) ||
-				(initialized && isRendering) ?
-				r : SpriteRenderable.None;
+			return IsVisible(self, self.World.RenderPlayer) || isRendering ? r : SpriteRenderable.None;
 		}
 	}
 }

@@ -9,6 +9,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -51,9 +52,9 @@ namespace OpenRA
 
 		public static OrderManager JoinServer(string host, int port, string password, bool recordReplay = true)
 		{
-			IConnection connection = new NetworkConnection(host, port);
+			var connection = new NetworkConnection(host, port);
 			if (recordReplay)
-				connection = new ReplayRecorderConnection(connection, TimestampedFilename);
+				connection.StartRecording(TimestampedFilename);
 
 			var om = new OrderManager(host, port, password, connection);
 			JoinInner(om);
@@ -255,9 +256,14 @@ namespace OpenRA
 
 		public static bool IsModInstalled(string modId)
 		{
-			return Manifest.AllMods[modId].RequiresMods.All(mod => ModMetadata.AllMods.ContainsKey(mod.Key)
+			return Manifest.AllMods[modId].RequiresMods.All(IsModInstalled);
+		}
+
+		public static bool IsModInstalled(KeyValuePair<string, string> mod)
+		{
+			return ModMetadata.AllMods.ContainsKey(mod.Key)
 				&& ModMetadata.AllMods[mod.Key].Version == mod.Value
-				&& IsModInstalled(mod.Key));
+				&& IsModInstalled(mod.Key);
 		}
 
 		public static void InitializeMod(string mod, Arguments args)
@@ -485,7 +491,11 @@ namespace OpenRA
 					Sound.Tick();
 					Sync.CheckSyncUnchanged(world, orderManager.TickImmediate);
 
-					if (world != null)
+					if (world == null)
+						return;
+
+					// Don't tick when the shellmap is disabled
+					if (world.ShouldTick)
 					{
 						var isNetTick = LocalTick % NetTickScale == 0;
 
@@ -511,12 +521,13 @@ namespace OpenRA
 
 							PerfHistory.Tick();
 						}
-						else
-							if (orderManager.NetFrameNumber == 0)
-								orderManager.LastTickTime = RunTime;
+						else if (orderManager.NetFrameNumber == 0)
+							orderManager.LastTickTime = RunTime;
 
 						Sync.CheckSyncUnchanged(world, () => world.TickRender(worldRenderer));
 					}
+					else
+						PerfHistory.Tick();
 				}
 			}
 		}
