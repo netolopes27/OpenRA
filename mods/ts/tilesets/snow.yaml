@@ -45,16 +45,16 @@ Terrain:
 	TerrainType@Tiberium:
 		Type: Tiberium
 		AcceptsSmudgeType: SmallCrater, MediumCrater, LargeCrater, SmallScorch, MediumScorch, LargeScorch
-		Color: A1E21C
+		Color: 009000
 		TargetTypes: Ground
 	TerrainType@BlueTiberium:
 		Type: BlueTiberium
 		AcceptsSmudgeType: SmallCrater, MediumCrater, LargeCrater, SmallScorch, MediumScorch, LargeScorch
-		Color: 1C40F8
+		Color: 202080
 		TargetTypes: Ground
 	TerrainType@Veins:
 		Type: Veins
-		Color: E26700
+		Color: 000000
 		TargetTypes: Ground
 	TerrainType@Tree:
 		Type: Tree
@@ -13319,4 +13319,3 @@ Templates:
 			0: Road
 				LeftColor: 97A8B7
 				RightColor: 99AAB8
-

@@ -2810,9 +2810,24 @@ namespace OpenRA.Mods.Common.UtilityCommands
 				// Remove obsolete TransformOnPassenger trait.
 				if (engineVersion < 20160102)
 				{
-					node.Value.Nodes.RemoveAll(x => x.Key.Contains("TransformOnPassenger"));
-					Console.WriteLine("TransformOnPassenger has been removed.");
-					Console.WriteLine("Use the upgrades system to apply modifiers to the transport actor instead.");
+					var removed = node.Value.Nodes.RemoveAll(x => x.Key.Contains("TransformOnPassenger"));
+					if (removed > 0)
+					{
+						Console.WriteLine("TransformOnPassenger has been removed.");
+						Console.WriteLine("Use the upgrades system to apply modifiers to the transport actor instead.");
+					}
+				}
+
+				if (engineVersion < 20160103)
+				{
+					// Overhauled WithActiveAnimation -> WithIdleAnimation
+					if (node.Key == "WithActiveAnimation")
+					{
+						node.Key = "WithIdleAnimation";
+						foreach (var n in node.Value.Nodes)
+							if (n.Key == "Sequence")
+								n.Key = "Sequences";
+					}
 				}
 
 				UpgradeActorRules(engineVersion, ref node.Value.Nodes, node, depth + 1);

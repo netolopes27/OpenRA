@@ -571,7 +571,7 @@
 	SeedsResource:
 		ResourceType: Tiberium
 		Interval: 55
-	WithActiveAnimation:
+	WithIdleAnimation:
 
 ^Tree:
 	Inherits@1: ^SpriteActor
@@ -737,4 +737,3 @@
 	Inherits: ^TerrainOverlay
 	CustomSelectionSize:
 		CustomBounds: 220,220
-
