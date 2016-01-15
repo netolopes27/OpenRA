@@ -110,7 +110,7 @@ namespace OpenRA.Mods.Common.Orders
 						yield break;
 					}
 
-					if (world.Map.Rules.Actors[building].HasTraitInfo<LineBuildInfo>())
+					if (world.Map.Rules.Actors[building].HasTraitInfo<LineBuildInfo>() && !mi.Modifiers.HasModifier(Modifiers.Shift))
 						orderType = "LineBuild";
 				}
 
@@ -148,12 +148,12 @@ namespace OpenRA.Mods.Common.Orders
 		{
 			var xy = wr.Viewport.ViewToWorld(Viewport.LastMousePos);
 			var topLeft = xy - FootprintUtils.AdjustForBuildingSize(buildingInfo);
-
+			var offset = world.Map.CenterOfCell(topLeft) + FootprintUtils.CenterOffset(world, buildingInfo);
 			var rules = world.Map.Rules;
 
 			var actorInfo = rules.Actors[building];
 			foreach (var dec in actorInfo.TraitInfos<IPlaceBuildingDecorationInfo>())
-				foreach (var r in dec.Render(wr, world, actorInfo, world.Map.CenterOfCell(xy)))
+				foreach (var r in dec.Render(wr, world, actorInfo, offset))
 					yield return r;
 
 			var cells = new Dictionary<CPos, bool>();
@@ -172,8 +172,11 @@ namespace OpenRA.Mods.Common.Orders
 				if (buildingInfo.Dimensions.X != 1 || buildingInfo.Dimensions.Y != 1)
 					throw new InvalidOperationException("LineBuild requires a 1x1 sized Building");
 
-				foreach (var t in BuildingUtils.GetLineBuildCells(world, topLeft, building, buildingInfo))
-					cells.Add(t, buildingInfo.IsCloseEnoughToBase(world, world.LocalPlayer, building, t));
+				if (!Game.GetModifierKeys().HasModifier(Modifiers.Shift))
+					foreach (var t in BuildingUtils.GetLineBuildCells(world, topLeft, building, buildingInfo))
+						cells.Add(t, buildingInfo.IsCloseEnoughToBase(world, world.LocalPlayer, building, t));
+				else
+					cells.Add(topLeft, buildingInfo.IsCloseEnoughToBase(world, world.LocalPlayer, building, topLeft));
 			}
 			else
 			{
@@ -194,7 +197,6 @@ namespace OpenRA.Mods.Common.Orders
 					initialized = true;
 				}
 
-				var offset = world.Map.CenterOfCell(topLeft) + FootprintUtils.CenterOffset(world, buildingInfo);
 				var previewRenderables = preview
 					.SelectMany(p => p.Render(wr, offset))
 					.OrderBy(WorldRenderer.RenderableScreenZPositionComparisonKey);
