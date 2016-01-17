@@ -103,11 +103,12 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				var yaml = MiniYaml.ApplyRemovals(partial);
 				foreach (var kv in yaml)
 				{
-					var missionMapPaths = kv.Value.Nodes.Select(n => Path.GetFullPath(n.Key));
+					var missionMapPaths = kv.Value.Nodes.Select(n => Path.GetFullPath(n.Key)).ToList();
 
 					var maps = Game.ModData.MapCache
 						.Where(p => p.Status == MapStatus.Available && missionMapPaths.Contains(Path.GetFullPath(p.Map.Path)))
-						.Select(p => p.Map);
+						.Select(p => p.Map)
+						.OrderBy(m => missionMapPaths.IndexOf(Path.GetFullPath(m.Path)));
 
 					CreateMissionGroup(kv.Key, maps);
 					allMaps.AddRange(maps);
@@ -301,29 +302,11 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				PlayVideo(fsPlayer, gameStartVideo, PlayingVideo.GameStart, () =>
 				{
 					StopVideo(fsPlayer);
-					StartMission();
+					Game.StartMission(selectedMapPreview.Uid, gameSpeed, difficulty, onStart);
 				});
 			}
 			else
-				StartMission();
-		}
-
-		void StartMission()
-		{
-			OrderManager om = null;
-
-			Action lobbyReady = null;
-			lobbyReady = () =>
-			{
-				om.IssueOrder(Order.Command("gamespeed {0}".F(gameSpeed)));
-				om.IssueOrder(Order.Command("difficulty {0}".F(difficulty)));
-				Game.LobbyInfoChanged -= lobbyReady;
-				onStart();
-				om.IssueOrder(Order.Command("state {0}".F(Session.ClientState.Ready)));
-			};
-			Game.LobbyInfoChanged += lobbyReady;
-
-			om = Game.JoinServer(IPAddress.Loopback.ToString(), Game.CreateLocalServer(selectedMapPreview.Uid), "");
+				Game.StartMission(selectedMapPreview.Uid, gameSpeed, difficulty, onStart);
 		}
 
 		class DropDownOption

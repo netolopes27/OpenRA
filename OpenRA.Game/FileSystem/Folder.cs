@@ -13,7 +13,7 @@ using System.IO;
 
 namespace OpenRA.FileSystem
 {
-	public sealed class Folder : IFolder
+	public sealed class Folder : IReadWritePackage
 	{
 		readonly string path;
 		readonly int priority;

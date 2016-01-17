@@ -270,6 +270,7 @@
     <Compile Include="Traits\Attack\AttackFrontal.cs" />
     <Compile Include="Traits\Attack\AttackGarrisoned.cs" />
     <Compile Include="Traits\Attack\AttackOmni.cs" />
+    <Compile Include="Traits\Attack\AttackSuicides.cs" />
     <Compile Include="Traits\Attack\AttackTurreted.cs" />
     <Compile Include="Traits\Attack\AttackWander.cs" />
     <Compile Include="Traits\AutoTarget.cs" />
@@ -433,7 +434,7 @@
     <Compile Include="Traits\Render\WithDeathAnimation.cs" />
     <Compile Include="Traits\Render\WithDecoration.cs" />
     <Compile Include="Traits\Render\WithDockingAnimation.cs" />
-    <Compile Include="Traits\Render\WithDockingOverlay.cs" />
+    <Compile Include="Traits\Render\WithDockedOverlay.cs" />
     <Compile Include="Traits\Render\WithHarvestAnimation.cs" />
     <Compile Include="Traits\Render\WithHarvestOverlay.cs" />
     <Compile Include="Traits\Render\WithIdleOverlay.cs" />
@@ -724,6 +725,7 @@
     <Compile Include="FileFormats\XORDeltaCompression.cs" />
     <Compile Include="FileFormats\RLEZerosCompression.cs" />
     <Compile Include="FileFormats\IniFile.cs" />
+    <Compile Include="Orders\GuardOrderGenerator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
