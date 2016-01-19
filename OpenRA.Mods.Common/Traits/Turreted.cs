@@ -8,7 +8,6 @@
  */
 #endregion
 
-using System;
 using System.Collections.Generic;
 using OpenRA.Primitives;
 using OpenRA.Traits;
@@ -110,7 +109,8 @@ namespace OpenRA.Mods.Common.Traits
 
 		public bool FaceTarget(Actor self, Target target)
 		{
-			DesiredFacing = Util.GetFacing(target.CenterPosition - self.CenterPosition, TurretFacing);
+			var delta = target.CenterPosition - self.CenterPosition;
+			DesiredFacing = delta.HorizontalLengthSquared != 0 ? delta.Yaw.Facing : TurretFacing;
 			MoveTurret();
 			return TurretFacing == DesiredFacing.Value;
 		}

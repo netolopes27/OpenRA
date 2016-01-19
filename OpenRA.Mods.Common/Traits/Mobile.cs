@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using OpenRA.Activities;
-using OpenRA.Mods.Common;
 using OpenRA.Mods.Common.Activities;
 using OpenRA.Primitives;
 using OpenRA.Traits;
@@ -84,7 +83,7 @@ namespace OpenRA.Mods.Common.Traits
 				var nodesDict = t.Value.ToDictionary();
 				var cost = nodesDict.ContainsKey("PathingCost")
 					? FieldLoader.GetValue<int>("cost", nodesDict["PathingCost"].Value)
-					: (int)(10000 / speed);
+					: 10000 / speed;
 				ret.Add(t.Key, new TerrainInfo(speed, cost));
 			}
 
@@ -369,7 +368,7 @@ namespace OpenRA.Mods.Common.Traits
 				SetVisualPosition(self, init.World.Map.CenterOfSubCell(FromCell, FromSubCell));
 			}
 
-			this.Facing = init.Contains<FacingInit>() ? init.Get<FacingInit, int>() : info.InitialFacing;
+			Facing = init.Contains<FacingInit>() ? init.Get<FacingInit, int>() : info.InitialFacing;
 
 			// Sets the visual position to WPos accuracy
 			// Use LocationInit if you want to insert the actor into the ActorMap!
@@ -704,7 +703,7 @@ namespace OpenRA.Mods.Common.Traits
 
 			public MoveOrderTargeter(Actor self, Mobile unit)
 			{
-				this.mobile = unit;
+				mobile = unit;
 				rejectMove = !self.AcceptsOrder("Move");
 			}
 
@@ -796,7 +795,8 @@ namespace OpenRA.Mods.Common.Traits
 			var speed = MovementSpeedForCell(self, cell);
 			var length = speed > 0 ? (toPos - fromPos).Length / speed : 0;
 
-			var facing = Util.GetFacing(toPos - fromPos, Facing);
+			var delta = toPos - fromPos;
+			var facing = delta.HorizontalLengthSquared != 0 ? delta.Yaw.Facing : Facing;
 			return Util.SequenceActivities(new Turn(self, facing), new Drag(self, fromPos, toPos, length));
 		}
 

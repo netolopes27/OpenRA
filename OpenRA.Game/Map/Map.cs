@@ -16,7 +16,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using OpenRA.FileSystem;
-using OpenRA.GameRules;
 using OpenRA.Graphics;
 using OpenRA.Network;
 using OpenRA.Support;
@@ -277,7 +276,7 @@ namespace OpenRA
 		{
 			var size = new Size(width, height);
 			Grid = Game.ModData.Manifest.Get<MapGrid>();
-			var tileRef = new TerrainTile(tileset.Templates.First().Key, (byte)0);
+			var tileRef = new TerrainTile(tileset.Templates.First().Key, 0);
 
 			Title = "Name your map here";
 			Description = "Describe your map here";
@@ -604,7 +603,7 @@ namespace OpenRA
 
 			foreach (var field in fields)
 			{
-				var f = this.GetType().GetField(field);
+				var f = GetType().GetField(field);
 				if (f.GetValue(this) == null)
 					continue;
 				root.Add(new MiniYamlNode(field, FieldSaver.FormatValue(this, f)));
@@ -915,7 +914,11 @@ namespace OpenRA
 
 		public int FacingBetween(CPos cell, CPos towards, int fallbackfacing)
 		{
-			return Traits.Util.GetFacing(CenterOfCell(towards) - CenterOfCell(cell), fallbackfacing);
+			var delta = CenterOfCell(towards) - CenterOfCell(cell);
+			if (delta.HorizontalLengthSquared == 0)
+				return fallbackfacing;
+
+			return delta.Yaw.Facing;
 		}
 
 		public void Resize(int width, int height)		// editor magic.

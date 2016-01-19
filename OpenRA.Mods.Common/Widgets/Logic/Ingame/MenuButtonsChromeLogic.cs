@@ -10,9 +10,7 @@
 
 using System;
 using System.Linq;
-using OpenRA.Mods.Common.Orders;
 using OpenRA.Mods.Common.Traits;
-using OpenRA.Mods.Common.Widgets;
 using OpenRA.Widgets;
 
 namespace OpenRA.Mods.Common.Widgets.Logic
@@ -122,6 +120,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			});
 
 			currentWidget = Game.LoadWidget(world, button.MenuContainer, menuRoot, widgetArgs);
+			Game.RunAfterTick(Ui.ResetTooltips);
 		}
 	}
 }

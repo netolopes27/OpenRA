@@ -11,7 +11,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using OpenRA.Effects;
 using OpenRA.GameRules;
 using OpenRA.Graphics;
@@ -100,7 +99,7 @@ namespace OpenRA.Mods.Common.Effects
 		{
 			this.info = info;
 			this.args = args;
-			this.pos = args.Source;
+			pos = args.Source;
 
 			var world = args.SourceActor.World;
 
@@ -123,7 +122,7 @@ namespace OpenRA.Mods.Common.Effects
 				target += WVec.FromPDF(world.SharedRandom, 2) * maxOffset / 1024;
 			}
 
-			facing = OpenRA.Traits.Util.GetFacing(target - pos, 0);
+			facing = (target - pos).Yaw.Facing;
 			length = Math.Max((target - pos).Length / speed.Length, 1);
 
 			if (!string.IsNullOrEmpty(info.Image))

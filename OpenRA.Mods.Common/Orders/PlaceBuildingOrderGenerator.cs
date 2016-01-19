@@ -12,11 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenRA.Graphics;
-using OpenRA.Mods.Common.Activities;
 using OpenRA.Mods.Common.Graphics;
 using OpenRA.Mods.Common.Traits;
 using OpenRA.Primitives;
-using OpenRA.Traits;
 using Util = OpenRA.Traits.Util;
 
 namespace OpenRA.Mods.Common.Orders
@@ -236,7 +234,7 @@ namespace OpenRA.Mods.Common.Orders
 
 			var blockers = allTiles.SelectMany(world.ActorMap.GetActorsAt)
 				.Where(a => a.Owner == queue.Actor.Owner && a.IsIdle)
-				.Select(a => new TraitPair<Mobile> { Actor = a, Trait = a.TraitOrDefault<Mobile>() });
+				.Select(a => new TraitPair<Mobile>(a, a.TraitOrDefault<Mobile>()));
 
 			foreach (var blocker in blockers.Where(x => x.Trait != null))
 			{

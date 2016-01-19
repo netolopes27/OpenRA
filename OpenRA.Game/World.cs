@@ -196,7 +196,7 @@ namespace OpenRA
 		public void LoadComplete(WorldRenderer wr)
 		{
 			// ScreenMap must be initialized before anything else
-			using (new Support.PerfTimer("ScreenMap.WorldLoaded"))
+			using (new PerfTimer("ScreenMap.WorldLoaded"))
 				ScreenMap.WorldLoaded(this, wr);
 
 			foreach (var wlh in WorldActor.TraitsImplementing<IWorldLoaded>())
@@ -205,7 +205,7 @@ namespace OpenRA
 				if (wlh == ScreenMap)
 					continue;
 
-				using (new Support.PerfTimer(wlh.GetType().Name + ".WorldLoaded"))
+				using (new PerfTimer(wlh.GetType().Name + ".WorldLoaded"))
 					wlh.WorldLoaded(this, wr);
 			}
 
@@ -374,7 +374,7 @@ namespace OpenRA
 
 		public IEnumerable<Actor> ActorsHavingTrait<T>(Func<T, bool> predicate)
 		{
-			return TraitDict.ActorsHavingTrait<T>(predicate);
+			return TraitDict.ActorsHavingTrait(predicate);
 		}
 
 		public void OnPlayerWinStateChanged(Player player)
@@ -408,14 +408,21 @@ namespace OpenRA
 		}
 	}
 
-	public struct TraitPair<T>
+	public struct TraitPair<T> : IEquatable<TraitPair<T>>
 	{
-		public Actor Actor;
-		public T Trait;
+		public readonly Actor Actor;
+		public readonly T Trait;
 
-		public override string ToString()
-		{
-			return "{0}->{1}".F(Actor.Info.Name, Trait.GetType().Name);
-		}
+		public TraitPair(Actor actor, T trait) { Actor = actor; Trait = trait; }
+
+		public static bool operator ==(TraitPair<T> me, TraitPair<T> other) { return me.Actor == other.Actor && Equals(me.Trait, other.Trait); }
+		public static bool operator !=(TraitPair<T> me, TraitPair<T> other) { return !(me == other); }
+
+		public override int GetHashCode() { return Actor.GetHashCode() ^ Trait.GetHashCode(); }
+
+		public bool Equals(TraitPair<T> other) { return this == other; }
+		public override bool Equals(object obj) { return obj is TraitPair<T> && Equals((TraitPair<T>)obj); }
+
+		public override string ToString() { return "{0}->{1}".F(Actor.Info.Name, Trait.GetType().Name); }
 	}
 }
